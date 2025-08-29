@@ -134,14 +134,20 @@
             
             try {
                 const arrayInput = document.getElementById('arrayInput').value;
-                const array = JSON.parse(arrayInput);
-                
-                                 const response = await fetch('/bfhl', {
+                const parsed = JSON.parse(arrayInput);
+
+                // Accept either a raw array or an object with { array: [...] }
+                const payload = Array.isArray(parsed) ? { array: parsed } : (parsed && Array.isArray(parsed.array) ? { array: parsed.array } : null);
+                if (!payload) {
+                    throw new Error('Please provide a JSON array or an object like { "array": [...] }');
+                }
+
+                const response = await fetch('/bfhl', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ array: array })
+                    body: JSON.stringify(payload)
                 });
                 
                 const data = await response.json();
