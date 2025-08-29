@@ -61,6 +61,7 @@ def process_array_data(input_array):
     
     # Process each element in the array
     all_alphabets = []
+    alphabetic_words: list[str] = []
     
     for item in input_array:
         item_str = str(item)
@@ -87,6 +88,8 @@ def process_array_data(input_array):
         elif item_str.isalpha():
             result['alphabets_uppercase'].append(item_str.upper())
             all_alphabets.extend(list(item_str))
+            # Treat as a whole alphabetic word
+            alphabetic_words.append(item_str)
         
         # Check if it's a special character
         elif len(item_str) == 1 and not item_str.isalnum():
@@ -99,21 +102,30 @@ def process_array_data(input_array):
             if alphabets:
                 result['alphabets_uppercase'].extend([alpha.upper() for alpha in alphabets])
                 all_alphabets.extend(alphabets)
+            # Extract contiguous alphabetic words from mixed strings
+            words_in_item = re.findall(r'[a-zA-Z]+', item_str)
+            if words_in_item:
+                alphabetic_words.extend(words_in_item)
             
             # Extract special characters
             special_chars = re.findall(r'[^a-zA-Z0-9\s]', item_str)
             result['special_characters'].extend(special_chars)
     
-    # Create concatenated alphabets in reverse order with alternating caps
-    if all_alphabets:
-        reversed_alphabets = all_alphabets[::-1]  # Reverse the list
-        alternating_caps = []
-        for i, char in enumerate(reversed_alphabets):
-            if i % 2 == 0:
-                alternating_caps.append(char.upper())
-            else:
-                alternating_caps.append(char.lower())
-        result['concatenated_alphabets_reverse_alternating'] = ''.join(alternating_caps)
+    # Create concatenated alphabets in reverse word order, reversing each word,
+    # and alternating caps globally across all letters while preserving spaces between words
+    if alphabetic_words:
+        reversed_words = [w[::-1] for w in alphabetic_words[::-1]]
+        alternating_chars: list[str] = []
+        global_index = 0
+        for word in reversed_words:
+            for ch in word:
+                alternating_chars.append(ch.upper() if global_index % 2 == 0 else ch.lower())
+                global_index += 1
+            alternating_chars.append(' ')
+        # Remove trailing space if present
+        if alternating_chars and alternating_chars[-1] == ' ':
+            alternating_chars.pop()
+        result['concatenated_alphabets_reverse_alternating'] = ''.join(alternating_chars)
     
     return result
 
